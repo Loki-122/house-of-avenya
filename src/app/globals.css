@@ -1,0 +1,177 @@
+@import "tailwindcss";
+
+@theme {
+  /* Typography */
+  --font-display: var(--font-avenya-display), "Playfair Display", Georgia, "Times New Roman", serif;
+  --font-sans: var(--font-avenya-sans), Inter, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+
+  --text-display-xl: clamp(3.5rem, 8vw, 7rem);
+  --text-display-xl--line-height: 1.05;
+  --text-display-xl--letter-spacing: -0.03em;
+  --text-display-lg: clamp(2.5rem, 5vw, 4.5rem);
+  --text-display-lg--line-height: 1.1;
+  --text-display-lg--letter-spacing: -0.02em;
+  --text-display-md: clamp(2rem, 4vw, 3rem);
+  --text-display-md--line-height: 1.15;
+  --text-display-md--letter-spacing: -0.01em;
+  --text-display-sm: clamp(1.5rem, 3vw, 2rem);
+  --text-display-sm--line-height: 1.2;
+  --text-editorial-lg: clamp(1.25rem, 2.5vw, 1.75rem);
+  --text-editorial-lg--line-height: 1.6;
+  --text-editorial-lg--letter-spacing: 0.01em;
+  --text-editorial-md: clamp(1.125rem, 2vw, 1.375rem);
+  --text-editorial-md--line-height: 1.7;
+  --text-editorial-md--letter-spacing: 0.01em;
+  --text-editorial-sm: clamp(1rem, 1.5vw, 1.125rem);
+  --text-editorial-sm--line-height: 1.75;
+  --text-editorial-sm--letter-spacing: 0.01em;
+
+  /* Brand palette */
+  --color-brand-ivory: #fdfbf7;
+  --color-brand-cream: #faf6f0;
+  --color-brand-warmWhite: #f5f0e8;
+  --color-brand-espresso: #2d1b15;
+  --color-brand-espressoLight: #3d2b22;
+  --color-brand-charcoal: #1a1a1a;
+  --color-brand-terracotta: #c45d3b;
+  --color-brand-terracottaLight: #d47d5d;
+  --color-brand-burgundy: #6b1d2d;
+  --color-brand-burgundyLight: #8b2d3d;
+  --color-brand-antiqueGold: #c9a86b;
+  --color-brand-antiqueGoldLight: #d8bc8a;
+  --color-brand-antiqueGoldDark: #a88a4e;
+
+  /* Pattern overlays */
+  --background-image-jaali-pattern: url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23C9A86B' fill-opacity='0.04'%3E%3Cpath d='M30 0L60 30L30 60L0 30Z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
+  --background-image-arch-pattern: url("data:image/svg+xml,%3Csvg width='120' height='120' viewBox='0 0 120 120' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23C9A86B' fill-opacity='0.03'%3E%3Cpath d='M60 0C26.86 0 0 26.86 0 60s26.86 60 60 60 60-26.86 60-60-26.86-60-60-60zm0 108C33.5 108 12 86.5 12 60S33.5 12 60 12s48 21.5 48 48-21.5 48-48 48z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
+  --background-image-paisley-pattern: url("data:image/svg+xml,%3Csvg width='80' height='80' viewBox='0 0 80 80' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23C9A86B' fill-opacity='0.025'%3E%3Cpath d='M40 0c-12.5 0-24 8.5-28 20 0 12 15 25 28 35 13-10 28-23 28-35C64 8.5 52.5 0 40 0z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
+
+  /* Motion */
+  --animate-fade-in: fadeIn 0.7s ease-out forwards;
+  --animate-slide-up: slideUp 0.8s ease-out forwards;
+  --animate-slide-down: slideDown 0.6s ease-out forwards;
+  --animate-scale-in: scaleIn 0.5s ease-out forwards;
+  --animate-reveal: reveal 1s ease-out forwards;
+  --animate-slide-in-right: slideInRight 0.4s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+
+  @keyframes fadeIn {
+    0% { opacity: 0; }
+    100% { opacity: 1; }
+  }
+  @keyframes slideUp {
+    0% { transform: translateY(30px); opacity: 0; }
+    100% { transform: translateY(0); opacity: 1; }
+  }
+  @keyframes slideDown {
+    0% { transform: translateY(-30px); opacity: 0; }
+    100% { transform: translateY(0); opacity: 1; }
+  }
+  @keyframes scaleIn {
+    0% { transform: scale(0.95); opacity: 0; }
+    100% { transform: scale(1); opacity: 1; }
+  }
+  @keyframes reveal {
+    0% { clip-path: inset(100% 0 0 0); opacity: 0; }
+    100% { clip-path: inset(0 0 0 0); opacity: 1; }
+  }
+  @keyframes slideInRight {
+    0% { transform: translateX(100%); }
+    100% { transform: translateX(0); }
+  }
+}
+
+/*
+  Base layer: these rules must sit in @layer base so Tailwind's layered
+  utilities (px-6, py-4, p-8, ...) can override them. Unlayered CSS wins
+  over any @layer, so a bare `* { padding: 0 }` here would silently kill
+  every padding/margin utility in the project.
+*/
+@layer base {
+  * {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+  }
+
+  /*
+    No `scroll-behavior: smooth` and no global `scroll-padding-top` here.
+
+    `scroll-behavior: smooth` made every router scroll (including the
+    scroll-to-top that Next.js performs on each navigation) animate instead
+    of jumping, which read as the page auto-scrolling after a header click.
+    `scroll-padding-top` applied to every navigation as well.
+
+    Fragment targets offset for the fixed header individually with
+    `scroll-mt-*` (see src/app/collections/page.tsx).
+  */
+  html {
+    scroll-behavior: auto;
+  }
+
+  body {
+    font-family: var(--font-sans);
+    background-color: #fdfbf7;
+    color: #2d1b15;
+    line-height: 1.6;
+    overflow-x: hidden;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+
+  /* Custom scrollbar */
+  ::-webkit-scrollbar {
+    width: 8px;
+  }
+
+  ::-webkit-scrollbar-track {
+    background: #fdfbf7;
+  }
+
+  ::-webkit-scrollbar-thumb {
+    background: #c9a86b;
+    border-radius: 4px;
+  }
+
+  ::-webkit-scrollbar-thumb:hover {
+    background: #a88a4e;
+  }
+
+  /* Selection */
+  ::selection {
+    background: #c9a86b;
+    color: #2d1b15;
+  }
+
+  /* Focus outline */
+  :focus-visible {
+    outline: 2px solid #c9a86b;
+    outline-offset: 2px;
+  }
+
+  /* Reduced motion */
+  @media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+      animation-duration: 0.01ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 0.01ms !important;
+      scroll-behavior: auto !important;
+    }
+  }
+
+  /* Print styles */
+  @media print {
+    .no-print {
+      display: none !important;
+    }
+  }
+}
+
+/* Utility classes for editorial typography */
+@layer utilities {
+  .text-balance {
+    text-wrap: balance;
+  }
+}
+
