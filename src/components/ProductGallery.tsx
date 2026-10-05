@@ -55,7 +55,7 @@ export default function ProductGallery({
                 onClick={() => setIndex(position)}
                 aria-label={`View image ${position + 1} of ${total} of ${name}`}
                 aria-current={isActive ? 'true' : undefined}
-                className={`block aspect-[4/5] w-full overflow-hidden bg-brand-warmWhite transition-[box-shadow,opacity] duration-300 ${
+                className={`block aspect-[4/5] w-full overflow-hidden bg-brand-warmWhite transition-[box-shadow,opacity] duration-500 ease-editorial ${
                   isActive
                     ? 'shadow-[inset_0_0_0_1px_#2d1b15]'
                     : 'opacity-70 hover:opacity-100 hover:shadow-[inset_0_0_0_1px_#c9a86b]'
@@ -92,7 +92,7 @@ export default function ProductGallery({
                 type="button"
                 onClick={() => goTo(index - 1)}
                 aria-label="Previous image"
-                className="absolute left-3 top-1/2 flex h-11 w-11 -translate-y-1/2 items-center justify-center bg-brand-ivory/85 text-brand-espresso transition-colors duration-300 hover:bg-brand-ivory hover:text-brand-terracotta"
+                className="absolute left-3 top-1/2 flex h-11 w-11 -translate-y-1/2 items-center justify-center bg-brand-ivory/85 text-brand-espresso transition-[background-color,color,transform,scale] duration-500 ease-editorial hover:scale-105 hover:bg-brand-ivory hover:text-brand-terracotta"
               >
                 <ArrowIcon direction="left" />
               </button>
@@ -100,7 +100,7 @@ export default function ProductGallery({
                 type="button"
                 onClick={() => goTo(index + 1)}
                 aria-label="Next image"
-                className="absolute right-3 top-1/2 flex h-11 w-11 -translate-y-1/2 items-center justify-center bg-brand-ivory/85 text-brand-espresso transition-colors duration-300 hover:bg-brand-ivory hover:text-brand-terracotta"
+                className="absolute right-3 top-1/2 flex h-11 w-11 -translate-y-1/2 items-center justify-center bg-brand-ivory/85 text-brand-espresso transition-[background-color,color,transform,scale] duration-500 ease-editorial hover:scale-105 hover:bg-brand-ivory hover:text-brand-terracotta"
               >
                 <ArrowIcon direction="right" />
               </button>

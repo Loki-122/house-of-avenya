@@ -2,6 +2,7 @@
 
 import { useEffect, useRef } from 'react';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import { useCart } from '@/lib/cart';
 import { formatPrice, FREE_SHIPPING_THRESHOLD } from '@/lib/format';
 
@@ -17,6 +18,7 @@ export default function CartDrawer() {
   const { items, itemCount, subtotal, shipping, total, isOpen, closeCart, setQuantity, removeItem } = useCart();
   const panelRef = useRef<HTMLDivElement>(null);
   const closeRef = useRef<HTMLButtonElement>(null);
+  const router = useRouter();
 
   useEffect(() => {
     if (!isOpen) return;
@@ -151,8 +153,9 @@ export default function CartDrawer() {
                           <button
                             type="button"
                             aria-label={`Decrease quantity of ${item.name}`}
+                            disabled={item.quantity <= 1}
                             onClick={() => setQuantity(item.productId, item.size, item.color, item.quantity - 1)}
-                            className="px-3 py-1.5 text-brand-espresso/70 transition-colors duration-200 hover:text-brand-terracotta"
+                            className="px-3 py-1.5 text-brand-espresso/70 transition-colors duration-200 hover:text-brand-terracotta disabled:cursor-not-allowed disabled:text-brand-espresso/25 disabled:hover:text-brand-espresso/25"
                           >
                             &minus;
                           </button>
@@ -210,15 +213,20 @@ export default function CartDrawer() {
                 </div>
               </dl>
 
+              {/* Checkout itself is the next release. This hands off to the full
+                  bag page, which is the step immediately before it. */}
               <button
                 type="button"
-                disabled
-                className="mt-6 w-full cursor-not-allowed bg-brand-warmWhite px-6 py-4 font-sans text-[0.6875rem] uppercase tracking-[0.25em] text-brand-espresso/45"
+                onClick={() => {
+                  closeCart();
+                  router.push('/cart');
+                }}
+                className="mt-6 w-full bg-brand-espresso px-6 py-4 font-sans text-[0.6875rem] uppercase tracking-[0.25em] text-brand-ivory transition-colors duration-300 hover:bg-brand-espressoLight"
               >
                 Proceed To Checkout
               </button>
               <p className="mt-3 text-center font-sans text-[0.5625rem] uppercase tracking-[0.2em] text-brand-espresso/45">
-                Checkout opens with the next release
+                Review your bag to continue
               </p>
             </div>
           </>

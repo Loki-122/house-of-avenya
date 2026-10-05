@@ -1,6 +1,7 @@
 import type { Metadata } from 'next'
 import { Inter, Playfair_Display } from 'next/font/google'
 import SiteHeader from '@/components/SiteHeader'
+import PageTransition from '@/components/PageTransition'
 import { CartProvider } from '@/lib/cart'
 import { WishlistProvider } from '@/lib/wishlist'
 import './globals.css'
@@ -47,7 +48,12 @@ export default function RootLayout({
         <CartProvider>
           <WishlistProvider>
             <SiteHeader />
-            {children}
+            {/*
+              Only the page content is wrapped. The header, cart drawer and
+              search overlay stay outside the transition so they keep their own
+              fixed positioning and never cross-fade.
+            */}
+            <PageTransition>{children}</PageTransition>
           </WishlistProvider>
         </CartProvider>
       </body>

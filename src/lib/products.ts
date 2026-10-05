@@ -9,7 +9,7 @@
  */
 
 export type ProductImage = {
-  /** Absolute URL. Kept as a full URL so the shape survives a CDN swap. */
+  /** Root-relative for files in /public, absolute once these move to a CDN. */
   src: string;
   alt: string;
 };
@@ -52,12 +52,47 @@ const APPAREL_SIZES = ['XS', 'S', 'M', 'L', 'XL', 'XXL'];
 const FREE_SIZE = ['Free Size'];
 
 /**
- * Pexels CDN helper. `h` produces a 4:5 crop, which is the aspect the grids and
- * galleries use everywhere on the site.
+ * Client photography, in the order the pieces appear in the catalogue.
+ *
+ * The files live in /public/products and are served by Next as static assets.
+ * `product-01` belongs to the first product, `product-02` to the second, and so
+ * on — the only thing that maps a product to a photograph is its position here.
  */
-function photo(id: number, w: number, alt: string, h?: number): ProductImage {
-  const size = h ? `&h=${h}` : '';
-  return { src: `https://images.pexels.com/photos/${id}/pexels-photo-${id}.jpeg?auto=compress&cs=tinysrgb&w=${w}${size}`, alt };
+const PRODUCT_PHOTOS = [
+  '/products/product-01.jpeg',
+  '/products/product-02.jpeg',
+  '/products/product-03.jpeg',
+  '/products/product-04.jpeg',
+  '/products/product-05.jpeg',
+  '/products/product-06.jpeg',
+  '/products/product-07.jpeg',
+  '/products/product-08.jpeg',
+];
+
+/**
+ * The piece each client photograph shows, in the same order. Used for alt text
+ * so a frame is always described by the garment actually visible in it.
+ */
+const PHOTO_OWNERS = [
+  'Aarvi Silk Saree',
+  'Meher Embroidered Kurta Set',
+  'Ira Draped Co-ord',
+  'Zara Banarasi Jacket',
+  'Rhea Embroidered Lehenga',
+  'Kaveri Organza Saree',
+  'Naina Zardozi Kurta',
+  'Tara Banarasi Dupatta',
+];
+
+/**
+ * Three frames per product so the gallery has something to move between: the
+ * piece's own shot first, then the next two in the set.
+ */
+function shots(startIndex: number): ProductImage[] {
+  return [0, 1, 2].map((offset) => {
+    const position = (startIndex + offset) % PRODUCT_PHOTOS.length;
+    return { src: PRODUCT_PHOTOS[position], alt: PHOTO_OWNERS[position] };
+  });
 }
 
 const GOLD = { name: 'Antique Gold', hex: '#c9a86b' };
@@ -88,11 +123,7 @@ export const products: Product[] = [
       'A Kanchipuram silk saree woven on a pit loom and finished with a broad antique-gold zari border. The pallu carries a traditional kumbam motif worked in zari, and the body is left unlined so it falls in the heavy, deliberate drape the weave is known for. Worn with a hand-rolled organza blouse in the colour of your choosing.',
     price: 18900,
     compareAtPrice: 22500,
-    images: [
-      photo(10317106, 1400, 'Stack of luxurious Kanchipuram silk sarees with intricate woven patterns'),
-      photo(10317106, 1200, 'Detail of a Kanchipuram silk saree with a broad woven zari border', 1500),
-      photo(7232413, 1200, 'Close-up of gold silk fabric with elegant folds and sheen'),
-    ],
+    images: shots(0),
     sizes: FREE_SIZE,
     colors: [MAROON, EMERALD, GOLD],
     stock: 12,
@@ -120,11 +151,7 @@ export const products: Product[] = [
     description:
       'A straight-cut kurta in terracotta mul cotton with a matching tapered trouser, worked with tonal resham thread across the yoke and cuffs. The handwork is picked rather than machine-embroidered, so the density shifts slightly across the panel — the mark of a piece made by one pair of hands.',
     price: 12500,
-    images: [
-      photo(8886950, 1400, 'Hands holding richly embroidered red fabric in fine detail'),
-      photo(8886950, 1200, 'Tonal resham thread embroidery worked across the kurta yoke', 1500),
-      photo(37975932, 1200, 'Close-up of an intricately embroidered Indian textile in deep red thread'),
-    ],
+    images: shots(1),
     sizes: APPAREL_SIZES,
     colors: [TERRACOTTA, IVORY, ESPRESSO],
     stock: 18,
@@ -152,11 +179,7 @@ export const products: Product[] = [
     description:
       'The everyday fusion piece: a fluid wrap top cut on the bias and a wide drawstring trouser, both in a washed ivory viscose that holds its drape without clinging. Designed to be styled open over a kurta or worn alone as a complete silhouette.',
     price: 9800,
-    images: [
-      photo(12725952, 1400, 'Full-length view of a woman in a flowing traditional Indian ensemble indoors'),
-      photo(12725952, 1200, 'Bias-cut wrap top falling to the hip in washed ivory viscose', 1500),
-      photo(28382914, 1200, 'A skilled artisan weaving fabric on a traditional handloom'),
-    ],
+    images: shots(2),
     sizes: APPAREL_SIZES,
     colors: [IVORY, ESPRESSO, SAND],
     stock: 24,
@@ -185,11 +208,7 @@ export const products: Product[] = [
       'A structured brocade jacket in gold-toned Banarasi silk, cut long through the hip with a mandarin collar and a concealed placket. Woven with a jaali ground so the whole surface shifts as it catches the light, and lined in ivory habotai so it sits cleanly over a saree or kurta.',
     price: 14200,
     compareAtPrice: 16900,
-    images: [
-      photo(7232413, 1400, 'Close-up of luxurious gold silk fabric with elegant folds and sheen'),
-      photo(7232413, 1200, 'Gold Banarasi brocade ground worked with a fine jaali motif', 1500),
-      photo(38876958, 1200, 'Model in an embellished Indian lehenga, lit in warm low light against a plain backdrop'),
-    ],
+    images: shots(3),
     sizes: APPAREL_SIZES,
     colors: [GOLD, ESPRESSO, MAROON],
     stock: 7,
@@ -218,11 +237,7 @@ export const products: Product[] = [
       'A bridal lehenga set in deep maroon raw silk with an antique-gold zardozi border, worked by hand across the ghera in a running jaali pattern. The skirt is cut with generous panel volume so it holds its shape through a full evening, and comes with a matching blouse and an organza dupatta with a scalloped edge.',
     price: 34000,
     compareAtPrice: 42000,
-    images: [
-      photo(38876958, 1400, 'Model in an embellished Indian lehenga, lit in warm low light against a plain backdrop'),
-      photo(38876958, 1200, 'Hand-worked zardozi border running along the lehenga ghera', 1500),
-      photo(36880919, 1200, 'Woman wearing a red saree with traditional jewellery, photographed in low warm light'),
-    ],
+    images: shots(4),
     sizes: ['XS', 'S', 'M', 'L', 'XL'],
     colors: [MAROON, BOTTLE, GOLD],
     stock: 4,
@@ -250,11 +265,7 @@ export const products: Product[] = [
     description:
       'A featherweight organza saree in bottle green, printed with a soft block-derived floral and finished with a narrow antique-gold tissue border. It weighs almost nothing, which makes it the saree to reach for in an Ahmedabad summer — the drape stays soft and it packs flat.',
     price: 16400,
-    images: [
-      photo(35212993, 1400, 'Woman in a green saree photographed in a clean studio setting'),
-      photo(35212993, 1200, 'Bottle green organza falling in soft translucent folds', 1500),
-      photo(37975932, 1200, 'Close-up of an intricately embroidered Indian textile in deep red thread'),
-    ],
+    images: shots(5),
     sizes: FREE_SIZE,
     colors: [BOTTLE, ROSE, INDIGO],
     stock: 15,
@@ -282,11 +293,7 @@ export const products: Product[] = [
     description:
       'An everyday kurta in saffron handloom cotton, cut slightly longer and fuller than a classic straight kurta, with antique-gold zardozi worked only at the neckline. Everything else is left quiet — the point is a piece you can reach for without thinking about it.',
     price: 8950,
-    images: [
-      photo(37975932, 1400, 'Close-up of an intricately embroidered Indian textile in deep red thread'),
-      photo(37975932, 1200, 'Antique-gold zardozi worked at the neckline of a saffron kurta', 1500),
-      photo(28382914, 1200, 'A skilled artisan weaving fabric on a traditional handloom'),
-    ],
+    images: shots(6),
     sizes: APPAREL_SIZES,
     colors: [SAFFRON],
     stock: 3,
@@ -314,11 +321,7 @@ export const products: Product[] = [
     description:
       'A sheer Banarasi dupatta in antique gold, woven with a small buti scattered across the field and a richly worked kalga border on all four sides. Light enough to drape over a heavy lehenga without weighing it down, substantial enough to carry an ensemble on its own.',
     price: 6400,
-    images: [
-      photo(36880919, 1400, 'Woman wearing a red saree with traditional jewellery, photographed in low warm light'),
-      photo(36880919, 1200, 'Sheer gold Banarasi dupatta with a scattered buti across the field', 1500),
-      photo(7232413, 1200, 'Close-up of gold silk fabric with elegant folds and sheen'),
-    ],
+    images: shots(7),
     sizes: FREE_SIZE,
     colors: [GOLD, ROSE, ONYX],
     stock: 0,
@@ -346,10 +349,21 @@ export const products: Product[] = [
     description:
       'An unlined jacket in indigo handloom cotton, cut boxy and cropped so it sits cleanly over a kurta or a plain sari blouse. Slubbed by the loom rather than by a mill, so no two lengths are exactly alike. This edition is in its final run.',
     price: 11200,
+    // No client photograph was supplied for this piece, so it keeps the last
+    // sample frame. Drop this to a single image once the ninth shot arrives.
     images: [
-      photo(28382914, 1400, 'A skilled artisan weaving fabric on a traditional handloom'),
-      photo(28382914, 1200, 'Slubbed indigo handloom cotton in an unlined cropped jacket', 1500),
-      photo(12725952, 1200, 'Full-length view of a woman in a flowing traditional Indian ensemble indoors'),
+      {
+        src: 'https://images.pexels.com/photos/28382914/pexels-photo-28382914.jpeg?auto=compress&cs=tinysrgb&w=1400',
+        alt: 'A skilled artisan weaving fabric on a traditional handloom',
+      },
+      {
+        src: 'https://images.pexels.com/photos/28382914/pexels-photo-28382914.jpeg?auto=compress&cs=tinysrgb&w=1200&h=1500',
+        alt: 'Slubbed handloom cotton in the weave',
+      },
+      {
+        src: 'https://images.pexels.com/photos/12725952/pexels-photo-12725952.jpeg?auto=compress&cs=tinysrgb&w=1200',
+        alt: 'Full-length view of a woman in a flowing traditional Indian ensemble indoors',
+      },
     ],
     sizes: ['XS', 'S', 'M', 'L', 'XL'],
     colors: [INDIGO, ONYX, SAND],
@@ -428,4 +442,48 @@ export function hasSizeChoice(product: Product): boolean {
 
 export function hasColorChoice(product: Product): boolean {
   return product.colors.length > 1;
+}
+
+export type Collection = {
+  label: string;
+  name: string;
+  description: string;
+  image: string;
+  alt: string;
+  href: string;
+};
+
+export const collections: Collection[] = [
+  {
+    label: '01',
+    name: 'Heritage',
+    description:
+      'Rich textures, traditional craftsmanship and timeless Indian details reinterpreted for today.',
+    image:
+      'https://images.pexels.com/photos/37975932/pexels-photo-37975932.jpeg?auto=compress&cs=tinysrgb&w=1200',
+    alt: 'Close-up of intricately embroidered Indian textile in deep red thread',
+    href: '/collections#heritage',
+  },
+  {
+    label: '02',
+    name: 'Modern Heirlooms',
+    description: 'Contemporary silhouettes inspired by the elegance of Indian ceremonial dressing.',
+    image:
+      'https://images.pexels.com/photos/36880919/pexels-photo-36880919.jpeg?auto=compress&cs=tinysrgb&w=1200',
+    alt: 'Woman wearing a red saree with traditional jewellery, photographed in low warm light',
+    href: '/collections#modern-heirlooms',
+  },
+  {
+    label: '03',
+    name: 'The Everyday Edit',
+    description: 'Effortless Indian-fusion pieces designed for modern everyday living.',
+    image:
+      'https://images.pexels.com/photos/35212993/pexels-photo-35212993.jpeg?auto=compress&cs=tinysrgb&w=1200',
+    alt: 'Woman in a green saree photographed in a clean studio setting',
+    href: '/collections#the-everyday-edit',
+  },
+];
+
+export function isNewArrival(product: { isNew: boolean }): boolean {
+  return product.isNew;
 }

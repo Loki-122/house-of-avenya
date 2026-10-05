@@ -3,9 +3,10 @@ import Footer from '@/components/Footer'
 import Newsletter from '@/components/Newsletter'
 import ProductCard from '@/components/ProductCard'
 import Reveal from '@/components/Reveal'
-import { collections, products, type Collection } from '@/lib/catalog'
+import { collections, getNewArrivalsAsync, type Collection } from '@/lib/catalog'
 
-export default function Home() {
+export default async function Home() {
+  const newArrivals = await getNewArrivalsAsync();
   return (
     <>
       <main className="min-h-screen overflow-x-clip">
@@ -187,7 +188,7 @@ export default function Home() {
 
           <div className="mt-16 grid grid-cols-2 gap-x-4 gap-y-10 sm:gap-6 lg:grid-cols-4">
             {/* Fixed four-slot edit: the homepage band is an approved layout and stays a single row. */}
-            {products.slice(0, 4).map((product, index) => (
+            {newArrivals.slice(0, 4).map((product, index) => (
               <ProductCard key={product.id} product={product} index={index} />
             ))}
           </div>

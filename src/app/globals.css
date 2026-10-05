@@ -46,6 +46,13 @@
   --background-image-arch-pattern: url("data:image/svg+xml,%3Csvg width='120' height='120' viewBox='0 0 120 120' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23C9A86B' fill-opacity='0.03'%3E%3Cpath d='M60 0C26.86 0 0 26.86 0 60s26.86 60 60 60 60-26.86 60-60-26.86-60-60-60zm0 108C33.5 108 12 86.5 12 60S33.5 12 60 12s48 21.5 48 48-21.5 48-48 48z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
   --background-image-paisley-pattern: url("data:image/svg+xml,%3Csvg width='80' height='80' viewBox='0 0 80 80' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23C9A86B' fill-opacity='0.025'%3E%3Cpath d='M40 0c-12.5 0-24 8.5-28 20 0 12 15 25 28 35 13-10 28-23 28-35C64 8.5 52.5 0 40 0z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
 
+  /*
+    Editorial easing: decelerates quickly then settles very slowly, with no
+    overshoot. Used for page transitions, image hovers and interactive states
+    so every movement in the site shares one calm, expensive-feeling curve.
+  */
+  --ease-editorial: cubic-bezier(0.22, 0.61, 0.36, 1);
+
   /* Motion */
   --animate-fade-in: fadeIn 0.7s ease-out forwards;
   --animate-slide-up: slideUp 0.8s ease-out forwards;
@@ -77,6 +84,168 @@
   @keyframes slideInRight {
     0% { transform: translateX(100%); }
     100% { transform: translateX(0); }
+  }
+}
+
+/*
+  Page-to-page transition.
+
+  `src/app/template.tsx` remounts on every route change, so one implementation
+  in PageTransition covers every navigation on the site. It runs in one of two
+  layers, never both — see the `data-avenya-view-transitions` flag below.
+
+  ---------------------------------------------------------------------------
+  Layer 1 — View Transitions (preferred)
+  ---------------------------------------------------------------------------
+  React's <ViewTransition> boundary is unmounted while the next one mounts, so
+  the browser pairs the two DOM snapshots and cross-fades them. The old page
+  genuinely fades and shifts out; the new one fades and shifts in. Nothing is
+  held on screen and the navigation is never delayed — the new page is live and
+  interactive immediately, the animation plays over it.
+
+  Timing is deliberately asymmetric. The exit is quick so the leaving page
+  stops competing for attention; the arrival is slower and delayed until the
+  exit has almost finished, so the two overlap only slightly. Total ~520ms.
+
+  The page boundary moves vertically; nothing scales, blurs or zooms.
+*/
+::view-transition {
+  /* The transition overlay otherwise swallows clicks for its duration. */
+  pointer-events: none;
+}
+
+/*
+  The header, cart drawer and search overlay render outside the page boundary,
+  so they should not participate. Disabling the root snapshots keeps the header
+  perfectly still while the page content cross-fades beneath it.
+*/
+::view-transition-old(root),
+::view-transition-new(root) {
+  animation: none;
+}
+
+/*
+  Neutralise the shared-element morph.
+
+  React pairs the two page boundaries by name and would normally animate one
+  into the other. The pages are different heights, so that would scale one
+  snapshot into the other's box — a slow zoom, which is exactly the effect to
+  avoid here. Turning the group animation off and releasing the image pair from
+  its default counter-scaling leaves both snapshots at their natural size,
+  aligned to the top left, so the only thing left animating is opacity and a
+  few pixels of vertical drift.
+*/
+::view-transition-group(.avenya-page-share) {
+  animation: none;
+}
+
+::view-transition-image-pair(.avenya-page-share) {
+  isolation: auto;
+}
+
+::view-transition-old(.avenya-page-share) {
+  animation:
+    var(--avenya-vt-exit, 200ms) cubic-bezier(0.4, 0, 1, 1) both avenyaFadeOut,
+    var(--avenya-vt-exit, 200ms) cubic-bezier(0.4, 0, 1, 1) both avenyaShiftOut;
+}
+
+::view-transition-new(.avenya-page-share) {
+  animation:
+    var(--avenya-vt-enter, 300ms) cubic-bezier(0, 0, 0.2, 1) var(--avenya-vt-delay, 100ms) both avenyaFadeIn,
+    var(--avenya-vt-enter-move, 420ms) var(--ease-editorial, cubic-bezier(0.22, 0.61, 0.36, 1))
+      var(--avenya-vt-delay, 100ms) both avenyaShiftIn;
+}
+
+@keyframes avenyaFadeOut {
+  from {
+    opacity: 1;
+  }
+  to {
+    opacity: 0;
+  }
+}
+
+@keyframes avenyaShiftOut {
+  from {
+    transform: translateY(0);
+  }
+  to {
+    transform: translateY(calc(var(--avenya-vt-rise, 8px) * -0.5));
+  }
+}
+
+@keyframes avenyaFadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes avenyaShiftIn {
+  from {
+    transform: translateY(var(--avenya-vt-rise, 8px));
+  }
+  to {
+    transform: translateY(0);
+  }
+}
+
+/*
+  Cross-fade tuning, kept in one place. Total motion is the enter leg:
+  delay 100ms + enter-move 420ms = 520ms.
+*/
+:root {
+  --avenya-vt-exit: 200ms;
+  --avenya-vt-delay: 100ms;
+  --avenya-vt-enter: 300ms;
+  --avenya-vt-enter-move: 420ms;
+  --avenya-vt-total: 520ms;
+  --avenya-vt-rise: 8px;
+}
+
+/*
+  ---------------------------------------------------------------------------
+  Layer 2 — CSS entrance (fallback)
+  ---------------------------------------------------------------------------
+  Browsers without the View Transitions API get an entrance only, since there
+  is no old DOM left to fade out. `backwards` fill applies the from-state before
+  the animation starts (no flash of the finished page) and releases it
+  afterwards, so the wrapper carries no transform or opacity override once the
+  transition is done. That matters: a lingering transform would keep the
+  wrapper as the containing block for any `position: fixed` descendant.
+
+  Duration and rise are set per route from PageTransition via these variables.
+  Transform and opacity only, so the transition cannot shift layout.
+*/
+@keyframes pageEnter {
+  from {
+    opacity: 0;
+    transform: translate3d(0, var(--avenya-page-rise, 10px), 0);
+  }
+  to {
+    opacity: 1;
+    transform: translate3d(0, 0, 0);
+  }
+}
+
+/*
+  Product grid entrance.
+
+  The page transition already carries the sense of arriving somewhere, so cards
+  only need to settle into place. This is a shorter, softer echo of pageEnter
+  with a tight stagger, replacing the old 320ms + 120ms-per-card cascade that
+  left the last card of a grid fading in almost two seconds after the click.
+*/
+@keyframes cardEnter {
+  from {
+    opacity: 0;
+    transform: translate3d(0, 6px, 0);
+  }
+  to {
+    opacity: 1;
+    transform: none;
   }
 }
 
@@ -148,7 +317,38 @@
     outline-offset: 2px;
   }
 
-  /* Reduced motion */
+  /*
+    Interactive baseline.
+
+    Gives every link, button and control a slow, eased change of colour and a
+    gentle transform/opacity ease, so hover states feel deliberate rather than
+    instant. Deliberately narrow: only properties that cannot affect layout.
+
+    Any Tailwind `transition-*` / `duration-*` utility on an element wins,
+    because this sits in @layer base.
+  */
+  a,
+  button,
+  [role='button'],
+  summary,
+  input,
+  select,
+  textarea {
+    transition-property: color, background-color, border-color, text-decoration-color, fill, stroke, opacity,
+      transform, translate, scale, rotate;
+    transition-duration: 400ms;
+    transition-timing-function: var(--ease-editorial);
+  }
+
+  /*
+    Reduced motion.
+
+    The blanket duration override is the safety net for ordinary CSS, but it
+    cannot reach the view-transition pseudo-elements. Those are cancelled
+    outright so the browser swaps states instantly, which is its own default
+    and the correct no-motion behaviour. The fallback entrance is removed for
+    the same reason: shortening it would still leave a visible fade.
+  */
   @media (prefers-reduced-motion: reduce) {
     *,
     *::before,
@@ -158,7 +358,17 @@
       transition-duration: 0.01ms !important;
       scroll-behavior: auto !important;
     }
-  }
+
+    .page-transition.is-css-fallback {
+      animation: none !important;
+    }
+
+    ::view-transition-group(*),
+    ::view-transition-image-pair(*),
+    ::view-transition-old(*),
+    ::view-transition-new(*) {
+      animation: none !important;
+    }  }
 
   /* Print styles */
   @media print {
@@ -172,6 +382,43 @@
 @layer utilities {
   .text-balance {
     text-wrap: balance;
+  }
+
+  /*
+    Page transition fallback.
+
+    Applied by PageTransition in a layout effect, and only after it has
+    confirmed that no view transition is running for this navigation — so this
+    can never compound with the cross-fade. It covers browsers without the View
+    Transitions API and history navigations, which Next does not wrap in a
+    transition.
+
+    `backwards` fill applies the from-state before the animation starts (no
+    flash of the finished page) and releases it afterwards, so the wrapper
+    carries no transform or opacity override once the transition is done. That
+    matters: a lingering transform would keep the wrapper as the containing
+    block for any `position: fixed` descendant.
+
+    Duration and rise are set per route from PageTransition via these variables.
+    Transform and opacity only, so the transition cannot shift layout.
+  */
+  .page-transition.is-css-fallback {
+    animation: pageEnter var(--avenya-page-duration, 520ms)
+      var(--ease-editorial, cubic-bezier(0.22, 0.61, 0.36, 1)) backwards;
+  }
+
+  /*
+    Cards must not fade again inside a transition that is already fading them.
+    Two opacity animations multiply, so a card at 0.5 inside a page at 0.5
+    reads as 0.25 — a muddy, dim frame rather than a calm handoff. The page
+    transition carries the motion; the cards simply arrive with it.
+  */
+  .page-transition .product-card-enter {
+    animation: none;
+  }
+
+  .product-card-enter {
+    animation: cardEnter 460ms var(--ease-editorial, cubic-bezier(0.22, 0.61, 0.36, 1)) backwards;
   }
 }
 

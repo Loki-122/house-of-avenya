@@ -8,11 +8,17 @@ import ProductCard from '@/components/ProductCard';
 import Newsletter from '@/components/Newsletter';
 import Footer from '@/components/Footer';
 import { formatPrice } from '@/lib/format';
-import { getProductBySlug, getRelatedProducts, productHref, products } from '@/lib/products';
+import { getRelatedProducts, productHref, products, getProductBySlugAsync, getRelatedProductsAsync } from '@/lib/catalog';
 
 type ProductPageProps = {
   params: Promise<{ slug: string }>;
 };
+
+const SITE_ORIGIN = 'https://houseofavenya.com';
+
+function absoluteImageUrl(src: string): string {
+  return src.startsWith('/') ? `${SITE_ORIGIN}${src}` : src;
+}
 
 export function generateStaticParams() {
   return products.map((product) => ({ slug: product.slug }));
@@ -20,7 +26,7 @@ export function generateStaticParams() {
 
 export async function generateMetadata({ params }: ProductPageProps): Promise<Metadata> {
   const { slug } = await params;
-  const product = getProductBySlug(slug);
+  const product = await getProductBySlugAsync(slug);
 
   if (!product) {
     return { title: 'Piece Not Found — House of Avenya' };
@@ -32,18 +38,18 @@ export async function generateMetadata({ params }: ProductPageProps): Promise<Me
     openGraph: {
       title: `${product.name} — House of Avenya`,
       description: product.description,
-      images: [{ url: product.images[0].src, alt: product.images[0].alt }],
+      images: [{ url: absoluteImageUrl(product.images[0].src), alt: product.images[0].alt }],
     },
   };
 }
 
 export default async function ProductPage({ params }: ProductPageProps) {
   const { slug } = await params;
-  const product = getProductBySlug(slug);
+  const product = await getProductBySlugAsync(slug);
 
   if (!product) notFound();
 
-  const related = getRelatedProducts(product);
+  const related = await getRelatedProductsAsync(product);
 
   return (
     <>

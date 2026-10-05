@@ -30,10 +30,10 @@ export default function WishlistButton({
 
   const variantClasses =
     variant === 'overlay'
-      ? `absolute right-3 top-3 z-10 flex h-9 w-9 items-center justify-center bg-brand-ivory/85 transition-colors duration-300 hover:text-brand-terracotta ${
+      ? `absolute right-3 top-3 z-10 flex h-9 w-9 items-center justify-center bg-brand-ivory/85 transition-[color,background-color,opacity,transform,scale] duration-500 ease-editorial hover:scale-105 hover:text-brand-terracotta active:scale-95 ${
           saved ? 'text-brand-terracotta' : 'text-brand-espresso/70'
         }`
-      : `flex h-14 w-14 shrink-0 items-center justify-center border transition-colors duration-300 ${
+      : `flex h-14 w-14 shrink-0 items-center justify-center border transition-[color,background-color,border-color,transform,scale] duration-500 ease-editorial hover:scale-[1.03] active:scale-[0.98] ${
           saved
             ? 'border-brand-terracotta text-brand-terracotta'
             : 'border-brand-antiqueGold/40 text-brand-espresso/70 hover:border-brand-terracotta hover:text-brand-terracotta'
@@ -54,6 +54,7 @@ export default function WishlistButton({
         aria-hidden="true"
         {...STROKE_PROPS}
         fill={saved ? 'currentColor' : 'none'}
+        className="transition-[fill,transform,scale,opacity] duration-500 ease-editorial"
       >
         <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z" />
       </svg>

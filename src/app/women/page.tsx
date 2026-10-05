@@ -3,15 +3,16 @@ import PageHero from '@/components/PageHero';
 import ProductCard from '@/components/ProductCard';
 import Newsletter from '@/components/Newsletter';
 import Footer from '@/components/Footer';
-import { products } from '@/lib/catalog';
+import { getProducts } from '@/lib/catalog';
 
 export const metadata: Metadata = {
   title: 'Women — House of Avenya',
   description:
-    'The full House of Avenya women’s collection — sarees, kurta sets, jackets and contemporary Indian-fusion pieces.',
+    "The full House of Avenya women's collection — sarees, kurta sets, jackets and contemporary Indian-fusion pieces.",
 };
 
-export default function WomenPage() {
+export default async function WomenPage() {
+  const products = await getProducts();
   return (
     <>
       <main className="min-h-screen overflow-x-clip">

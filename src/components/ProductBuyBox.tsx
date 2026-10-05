@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import WishlistButton from './WishlistButton';
 import { useCart, MAX_LINE_QUANTITY } from '@/lib/cart';
 import { discountPercent, formatPrice } from '@/lib/format';
@@ -15,14 +16,31 @@ const STOCK_COPY = {
 
 const ASSURANCES = ['Free shipping over ₹15,000', 'Seven-day returns', 'Hand-finished in India'];
 
+type Selection = {
+  size: string | null;
+  color: string | null;
+  quantity: number;
+};
+
+// A product that offers a variant choice starts unselected so the buy box has
+// to force a decision; a product with a single fixed variant starts settled.
+function initialSelection(product: Product): Selection {
+  return {
+    size: hasSizeChoice(product) ? null : product.sizes[0],
+    color: hasColorChoice(product) ? null : product.colors[0]?.name ?? null,
+    quantity: 1,
+  };
+}
+
 export default function ProductBuyBox({ product }: { product: Product }) {
   const { addItem, openCart } = useCart();
+  const router = useRouter();
 
-  const [size, setSize] = useState<string | null>(hasSizeChoice(product) ? null : product.sizes[0]);
-  const [color, setColor] = useState<string | null>(hasColorChoice(product) ? null : product.colors[0]?.name ?? null);
-  const [quantity, setQuantity] = useState(1);
+  const [selection, setSelection] = useState<Selection>(() => initialSelection(product));
   const [message, setMessage] = useState<string | null>(null);
   const [isAdded, setIsAdded] = useState(false);
+
+  const { size, color, quantity } = selection;
 
   const status = getStockStatus(product);
   const stock = STOCK_COPY[status];
@@ -32,10 +50,33 @@ export default function ProductBuyBox({ product }: { product: Product }) {
   const primary = product.images[0];
 
   const needsSize = hasSizeChoice(product) && size === null;
+  const needsColor = hasColorChoice(product) && color === null;
+
+  // Changing a variant drops the previous feedback: the "added" line no longer
+  // matches the selection, and a stale "choose a size" prompt would no longer be
+  // true.
+  const chooseVariant = (patch: Partial<Selection>) => {
+    setSelection((current) => ({ ...current, ...patch }));
+    setMessage(null);
+    setIsAdded(false);
+  };
+
+  const changeQuantity = (next: number) => {
+    setSelection((current) => ({ ...current, quantity: next }));
+    setMessage(null);
+  };
 
   const add = (then: 'bag' | 'buy') => {
+    // Both variant axes are optional per product, but a product that offers a
+    // choice must not be added without one — otherwise the cart line has no
+    // variant to show and cannot be matched to a real SKU.
     if (needsSize) {
       setMessage('Please choose a size to continue.');
+      return;
+    }
+
+    if (needsColor) {
+      setMessage('Please choose a colour to continue.');
       return;
     }
 
@@ -55,7 +96,13 @@ export default function ProductBuyBox({ product }: { product: Product }) {
 
     setIsAdded(true);
     setMessage(null);
-    if (then === 'buy') openCart();
+
+    if (then === 'buy') {
+      // The payment step itself is not wired up yet, so the bag order summary is
+      // the checkout placeholder: Buy Now puts this exact variant and quantity
+      // in the bag and hands off there rather than re-opening the drawer.
+      router.push('/cart');
+    }
   };
 
   return (
@@ -110,10 +157,7 @@ export default function ProductBuyBox({ product }: { product: Product }) {
                 <button
                   key={option}
                   type="button"
-                  onClick={() => {
-                    setSize(option);
-                    setIsAdded(false);
-                  }}
+                  onClick={() => chooseVariant({ size: option })}
                   aria-pressed={isSelected}
                   className={`min-w-[3.5rem] border px-4 py-2.5 font-sans text-[0.6875rem] uppercase tracking-[0.2em] transition-colors duration-300 ${
                     isSelected
@@ -143,10 +187,7 @@ export default function ProductBuyBox({ product }: { product: Product }) {
                 <button
                   key={option.name}
                   type="button"
-                  onClick={() => {
-                    setColor(option.name);
-                    setIsAdded(false);
-                  }}
+                  onClick={() => chooseVariant({ color: option.name })}
                   aria-pressed={isSelected}
                   aria-label={`Colour ${option.name}`}
                   className={`flex h-10 w-10 items-center justify-center rounded-full border transition-[box-shadow] duration-300 ${
@@ -173,7 +214,7 @@ export default function ProductBuyBox({ product }: { product: Product }) {
         <div className="mt-4 inline-flex items-center border border-brand-antiqueGold/40">
           <button
             type="button"
-            onClick={() => setQuantity((current) => Math.max(1, current - 1))}
+            onClick={() => changeQuantity(Math.max(1, quantity - 1))}
             disabled={quantity <= 1}
             aria-label="Decrease quantity"
             className="px-4 py-3 text-brand-espresso/70 transition-colors duration-200 hover:text-brand-terracotta disabled:cursor-not-allowed disabled:text-brand-espresso/25 disabled:hover:text-brand-espresso/25"
@@ -183,7 +224,7 @@ export default function ProductBuyBox({ product }: { product: Product }) {
           <span className="min-w-[3rem] text-center font-sans text-sm tabular-nums text-brand-espresso">{quantity}</span>
           <button
             type="button"
-            onClick={() => setQuantity((current) => Math.min(maxQuantity, current + 1))}
+            onClick={() => changeQuantity(Math.min(maxQuantity, quantity + 1))}
             disabled={quantity >= maxQuantity}
             aria-label="Increase quantity"
             className="px-4 py-3 text-brand-espresso/70 transition-colors duration-200 hover:text-brand-terracotta disabled:cursor-not-allowed disabled:text-brand-espresso/25 disabled:hover:text-brand-espresso/25"
