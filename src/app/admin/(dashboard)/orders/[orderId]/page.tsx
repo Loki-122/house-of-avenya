@@ -55,18 +55,8 @@ const ORDER_STATUS_STYLES: Record<string, StatusStyle> = {
   shipped: { tone: 'sky', icon: 'truck' },
   delivered: { tone: 'green', icon: 'checkCircle' },
   cancelled: { tone: 'red', icon: 'xCircle' },
-  refunded: { tone: 'neutral', icon: 'checkCircle' },
+  returned: { tone: 'neutral', icon: 'checkCircle' },
 };
-
-const ORDER_STATUS_OPTIONS: Array<'pending' | 'confirmed' | 'processing' | 'shipped' | 'delivered' | 'cancelled' | 'refunded'> = [
-  'pending',
-  'confirmed',
-  'processing',
-  'shipped',
-  'delivered',
-  'cancelled',
-  'refunded',
-];
 
 const PAYMENT_STATUS_STYLES: Record<string, StatusStyle> = {
   pending: { tone: 'amber', icon: 'clock' },
@@ -280,7 +270,7 @@ export default async function OrderDetailsPage({
                 </span>
               </div>
             )}
-            <OrderStatusControl orderId={orderId} currentStatus={order.status} />
+            <OrderStatusControl orderId={orderId} currentStatus={order.status} paymentStatus={order.payment_status} />
           </div>
         </div>
         <div className="rounded-xl border border-brand-antiqueGold/20 bg-white p-5">

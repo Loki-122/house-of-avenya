@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { getCustomerSessionWithToken } from '@/lib/auth';
 import { createSupabaseServerClient } from '@/lib/supabase-server';
+import { createSupabaseServiceClient } from '@/lib/supabase-service';
 import Razorpay from 'razorpay';
 
 export async function POST(request: Request) {
@@ -36,6 +37,7 @@ export async function POST(request: Request) {
     }
 
     const supabase = createSupabaseServerClient(session.accessToken);
+    const supabaseService = createSupabaseServiceClient();
 
     const { data: order, error: orderError } = await supabase
       .from('orders')
@@ -70,11 +72,10 @@ export async function POST(request: Request) {
         });
         rzpOrderId = rzpOrder.id;
 
-        const { error: updateError } = await supabase
+        const { error: updateError } = await supabaseService
           .from('orders')
           .update({ razorpay_order_id: rzpOrderId })
-          .eq('id', order.id)
-          .eq('user_id', session.user.id);
+          .eq('id', order.id);
 
         if (updateError) {
           console.error('[razorpay][create_order] Failed to store razorpay_order_id', updateError);

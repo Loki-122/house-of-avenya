@@ -49,7 +49,7 @@ const ORDER_STATUS_STYLES: Record<string, StatusStyle> = {
   shipped: { tone: 'sky', icon: 'truck' },
   delivered: { tone: 'green', icon: 'checkCircle' },
   cancelled: { tone: 'red', icon: 'xCircle' },
-  refunded: { tone: 'neutral', icon: 'checkCircle' },
+  returned: { tone: 'neutral', icon: 'checkCircle' },
 };
 
 const PAYMENT_STATUS_STYLES: Record<string, StatusStyle> = {

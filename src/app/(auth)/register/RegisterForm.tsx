@@ -8,6 +8,7 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { supabase } from '@/lib/supabase';
 import { writeCustomerSessionCookie } from '@/lib/customer-cookie';
+import { PasswordInput } from '@/components/PasswordInput';
 
 const ERROR_MESSAGES: Record<string, string> = {
   'User already registered':
@@ -235,21 +236,15 @@ export default function RegisterForm() {
               </div>
 
               <div>
-                <label
-                  htmlFor="register-password"
-                  className="mb-2 block text-[0.625rem] font-medium uppercase tracking-[0.25em] text-brand-espresso/60"
-                >
-                  Password
-                </label>
-                <input
+                <PasswordInput
                   id="register-password"
                   name="password"
-                  type="password"
                   autoComplete="new-password"
                   required
                   value={password}
                   onChange={(event) => setPassword(event.target.value)}
                   placeholder="At least 6 characters"
+                  label="Password"
                   className={INPUT_CLASSES}
                 />
                 {fieldErrors.password && (

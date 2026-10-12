@@ -3,21 +3,12 @@
 import { revalidatePath } from 'next/cache';
 
 import { updateOrderStatus, type UpdateOrderStatusInput } from '@/lib/admin-orders';
+import { ORDER_STATUS_OPTIONS } from '@/lib/order-status';
 
 export interface UpdateOrderStatusFormState {
   ok: boolean;
   message: string;
 }
-
-const ORDER_STATUS_OPTIONS: Array<UpdateOrderStatusInput['status']> = [
-  'pending',
-  'confirmed',
-  'processing',
-  'shipped',
-  'delivered',
-  'cancelled',
-  'refunded',
-];
 
 export async function updateOrderStatusAction(
   _prev: UpdateOrderStatusFormState | null,

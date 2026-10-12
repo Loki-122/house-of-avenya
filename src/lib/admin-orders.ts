@@ -17,6 +17,12 @@
 
 import { cookies } from 'next/headers';
 import { ADMIN_SESSION_COOKIE } from './admin-cookie';
+import {
+  type OrderStatus,
+  type PaymentStatus,
+  isValidStatusTransition,
+  FULFILLMENT_STATUSES,
+} from './order-status';
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
 const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
@@ -337,7 +343,7 @@ export async function getAdminOrderItems(
 
 export type UpdateOrderStatusInput = {
   orderId: string;
-  status: 'pending' | 'confirmed' | 'processing' | 'shipped' | 'delivered' | 'cancelled' | 'refunded';
+  status: OrderStatus;
 };
 
 export async function updateOrderStatus(
@@ -345,21 +351,82 @@ export async function updateOrderStatus(
 ): Promise<void> {
   const token = await requireAdminToken();
 
-  const { error } = await adminApi(
-    `/rest/v1/orders?id=eq.${input.orderId}`,
+  // 1. Fetch the current order's status and payment_status so we can
+  //    validate the transition server-side (do not rely on the client dropdown).
+  const { data: orders, error: fetchError } = await adminApi<
+    Array<{ status: string; payment_status: string }>
+  >(
+    `/rest/v1/orders?id=eq.${encodeURIComponent(input.orderId)}&select=status,payment_status`,
+    { headers: { Authorization: `Bearer ${token}` } },
+  );
+
+  if (fetchError) {
+    throw new Error(fetchError.message ?? 'Failed to fetch order');
+  }
+  if (!orders || orders.length === 0) {
+    throw new Error('Order not found');
+  }
+
+  const currentStatus = orders[0].status as OrderStatus;
+  const paymentStatus = orders[0].payment_status;
+
+  // 2. Validate the transition against the state machine.
+  if (!isValidStatusTransition(currentStatus, input.status)) {
+    throw new Error(
+      `Cannot change order status from "${currentStatus}" to "${input.status}".`,
+    );
+  }
+
+  // 3. Payment gating — progression to any fulfilled state requires
+  //    payment_status === 'paid'. Cancellation of unpaid orders is always
+  //    allowed (covered by the transition map: pending → cancelled).
+  //    We do NOT automatically mark payment as paid.
+  if (
+    FULFILLMENT_STATUSES.includes(input.status) &&
+    paymentStatus !== 'paid'
+  ) {
+    throw new Error(
+      `Cannot set status to "${input.status}" — payment status is "${paymentStatus}". ` +
+        'Only verified payments (Razorpay) may advance an order to a fulfilled state.',
+    );
+  }
+
+  // 4. Optimistic concurrency: include the current status in the PATCH
+  //    filter so the update only succeeds if no other request has changed
+  //    the status since we read it. If the row doesn't match, PostgREST
+  //    returns 0 affected rows and the update is a no-op — we detect that
+  //    and surface an error.
+  const { data: updated, error } = await adminApi<
+    Array<{ status: string; payment_status: string }>
+  >(
+    `/rest/v1/orders?id=eq.${encodeURIComponent(input.orderId)}&status=eq.${encodeURIComponent(currentStatus)}`,
     {
       method: 'PATCH',
-      headers: { Authorization: `Bearer ${token}` },
-      body: JSON.stringify({ status: input.status, updated_at: new Date().toISOString() }),
+      headers: {
+        Authorization: `Bearer ${token}`,
+        Prefer: 'return=representation',
+      },
+      body: JSON.stringify({
+        status: input.status,
+        updated_at: new Date().toISOString(),
+      }),
     },
   );
 
-  if (error) throw new Error(error.message ?? 'Failed to update order status');
+  if (error) {
+    throw new Error(error.message ?? 'Failed to update order status');
+  }
+  if (!updated || updated.length === 0) {
+    throw new Error(
+      'Order status changed before the update could be applied. ' +
+        'Please refresh and try again.',
+    );
+  }
 }
 
 export type UpdatePaymentStatusInput = {
   orderId: string;
-  paymentStatus: 'pending' | 'paid' | 'failed' | 'refunded';
+  paymentStatus: PaymentStatus;
 };
 
 export async function updatePaymentStatus(
@@ -367,12 +434,25 @@ export async function updatePaymentStatus(
 ): Promise<void> {
   const token = await requireAdminToken();
 
+  // Security gate: only the Razorpay verification route may mark a payment
+  // as 'paid'. Allowing an admin to set payment_status = 'paid' through this
+  // function would let them confirm unpaid orders.
+  if (input.paymentStatus === 'paid') {
+    throw new Error(
+      'payment_status cannot be set to "paid" manually. ' +
+        'Only verified Razorpay payments update this value.',
+    );
+  }
+
   const { error } = await adminApi(
-    `/rest/v1/orders?id=eq.${input.orderId}`,
+    `/rest/v1/orders?id=eq.${encodeURIComponent(input.orderId)}`,
     {
       method: 'PATCH',
       headers: { Authorization: `Bearer ${token}` },
-      body: JSON.stringify({ payment_status: input.paymentStatus, updated_at: new Date().toISOString() }),
+      body: JSON.stringify({
+        payment_status: input.paymentStatus,
+        updated_at: new Date().toISOString(),
+      }),
     },
   );
 

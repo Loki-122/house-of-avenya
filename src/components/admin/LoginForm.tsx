@@ -20,6 +20,7 @@ import {
 } from '@/lib/admin-cookie';
 import { clearCustomerSessionCookie } from '@/lib/customer-cookie';
 import { AdminIcon, type AdminIconName } from './AdminIcon';
+import { PasswordInput } from '@/components/PasswordInput';
 
 const ERROR_MESSAGES: Record<string, string> = {
   'Invalid login credentials':
@@ -212,25 +213,17 @@ export default function LoginForm({
                 />
               </div>
 
-              <div>
-                <label
-                  htmlFor="admin-password"
-                  className="mb-2 block text-[0.625rem] font-medium uppercase tracking-[0.25em] text-brand-espresso/60"
-                >
-                  Password
-                </label>
-                <input
-                  id="admin-password"
-                  name="password"
-                  type="password"
-                  autoComplete="current-password"
-                  required
-                  value={password}
-                  onChange={(event) => setPassword(event.target.value)}
-                  placeholder="••••••••"
-                  className={INPUT_CLASSES}
-                />
-              </div>
+              <PasswordInput
+                id="admin-password"
+                name="password"
+                autoComplete="current-password"
+                required
+                value={password}
+                onChange={(event) => setPassword(event.target.value)}
+                placeholder="••••••••"
+                label="Password"
+                className={INPUT_CLASSES}
+              />
             </div>
 
             <button

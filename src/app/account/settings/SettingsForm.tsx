@@ -4,6 +4,7 @@ import { useState, type FormEvent } from 'react';
 import { supabase } from '@/lib/supabase';
 import { clearCustomerSessionCookie } from '@/lib/customer-cookie';
 import { useRouter } from 'next/navigation';
+import { PasswordInput } from '@/components/PasswordInput';
 
 const INPUT_CLASSES =
   'w-full rounded-md border border-brand-espresso/15 bg-brand-ivory px-4 py-3 text-sm text-brand-espresso placeholder:text-brand-espresso/35 transition-colors focus:border-brand-antiqueGold focus:outline-none focus:ring-2 focus:ring-brand-antiqueGold/25';
@@ -109,30 +110,22 @@ export default function SettingsForm() {
         )}
 
         <form onSubmit={handlePasswordChange} className="mt-6 space-y-5 max-w-md">
-          <div>
-            <label className="mb-2 block text-[0.625rem] font-medium uppercase tracking-[0.25em] text-brand-espresso/60">
-              New password
-            </label>
-            <input
-              type="password"
-              value={newPassword}
-              onChange={(e) => setNewPassword(e.target.value)}
-              placeholder="At least 6 characters"
-              className={INPUT_CLASSES}
-            />
-          </div>
-          <div>
-            <label className="mb-2 block text-[0.625rem] font-medium uppercase tracking-[0.25em] text-brand-espresso/60">
-              Confirm new password
-            </label>
-            <input
-              type="password"
-              value={confirmPassword}
-              onChange={(e) => setConfirmPassword(e.target.value)}
-              placeholder="Repeat your password"
-              className={INPUT_CLASSES}
-            />
-          </div>
+          <PasswordInput
+            type="password"
+            value={newPassword}
+            onChange={(e) => setNewPassword(e.target.value)}
+            placeholder="At least 6 characters"
+            label="New password"
+            className={INPUT_CLASSES}
+          />
+          <PasswordInput
+            type="password"
+            value={confirmPassword}
+            onChange={(e) => setConfirmPassword(e.target.value)}
+            placeholder="Repeat your password"
+            label="Confirm new password"
+            className={INPUT_CLASSES}
+          />
           <button
             type="submit"
             disabled={passwordSaving}

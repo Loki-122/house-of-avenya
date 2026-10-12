@@ -8,6 +8,7 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { supabase } from '@/lib/supabase';
 import { writeCustomerSessionCookie, clearCustomerSessionCookie } from '@/lib/customer-cookie';
+import { PasswordInput } from '@/components/PasswordInput';
 
 const ERROR_MESSAGES: Record<string, string> = {
   'Password should be at least 6 characters':
@@ -170,45 +171,29 @@ export default function ResetPasswordForm() {
             )}
 
             <div className="space-y-5">
-              <div>
-                <label
-                  htmlFor="new-password"
-                  className="mb-2 block text-[0.625rem] font-medium uppercase tracking-[0.25em] text-brand-espresso/60"
-                >
-                  New password
-                </label>
-                <input
+            <PasswordInput
                   id="new-password"
                   name="password"
-                  type="password"
                   autoComplete="new-password"
                   required
                   value={password}
                   onChange={(event) => setPassword(event.target.value)}
                   placeholder="At least 6 characters"
+                  label="New password"
                   className={INPUT_CLASSES}
                 />
-              </div>
 
-              <div>
-                <label
-                  htmlFor="confirm-password"
-                  className="mb-2 block text-[0.625rem] font-medium uppercase tracking-[0.25em] text-brand-espresso/60"
-                >
-                  Confirm password
-                </label>
-                <input
+            <PasswordInput
                   id="confirm-password"
                   name="confirmPassword"
-                  type="password"
                   autoComplete="new-password"
                   required
                   value={confirmPassword}
                   onChange={(event) => setConfirmPassword(event.target.value)}
                   placeholder="Repeat your password"
+                  label="Confirm password"
                   className={INPUT_CLASSES}
                 />
-              </div>
             </div>
 
             <button

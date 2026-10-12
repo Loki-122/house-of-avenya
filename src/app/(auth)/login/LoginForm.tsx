@@ -15,6 +15,7 @@ import { useRouter } from 'next/navigation';
 import { supabase } from '@/lib/supabase';
 import { writeCustomerSessionCookie, clearCustomerSessionCookie } from '@/lib/customer-cookie';
 import { clearAdminSessionCookie } from '@/lib/admin-cookie';
+import { PasswordInput } from '@/components/PasswordInput';
 
 const ERROR_MESSAGES: Record<string, string> = {
   'Invalid login credentials':
@@ -209,25 +210,17 @@ export default function LoginForm({
                 />
               </div>
 
-              <div>
-                <label
-                  htmlFor="customer-password"
-                  className="mb-2 block text-[0.625rem] font-medium uppercase tracking-[0.25em] text-brand-espresso/60"
-                >
-                  Password
-                </label>
-                <input
-                  id="customer-password"
-                  name="password"
-                  type="password"
-                  autoComplete="current-password"
-                  required
-                  value={password}
-                  onChange={(event) => setPassword(event.target.value)}
-                  placeholder="••••••••"
-                  className={INPUT_CLASSES}
-                />
-              </div>
+              <PasswordInput
+                id="customer-password"
+                name="password"
+                autoComplete="current-password"
+                required
+                value={password}
+                onChange={(event) => setPassword(event.target.value)}
+                placeholder="••••••••"
+                label="Password"
+                className={INPUT_CLASSES}
+              />
             </div>
 
             <button
