@@ -22,7 +22,7 @@
 --   - Admins: Can update orders via "Admins can update orders" RLS policy.
 --     Trigger allows them via public.is_admin() check.
 --   - Service-role (Razorpay verification): Bypasses RLS entirely.
---     Trigger allows via current_user = 'service_role' check.
+--     Trigger allows via session_user = 'service_role' check.
 --
 -- Safe to re-run. Does not drop or modify existing order data.
 
@@ -66,7 +66,7 @@ AS $$
 BEGIN
   -- Allow service_role (used by server-side payment verification routes)
   -- service_role bypasses RLS but triggers still fire
-  IF current_user = 'service_role' THEN
+  IF session_user = 'service_role' THEN
     RETURN NEW;
   END IF;
 
