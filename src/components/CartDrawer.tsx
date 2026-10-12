@@ -150,25 +150,37 @@ export default function CartDrawer() {
 
                       <div className="mt-auto flex items-center justify-between gap-3 pt-4">
                         <div className="flex items-center border border-brand-antiqueGold/40">
-                          <button
-                            type="button"
-                            aria-label={`Decrease quantity of ${item.name}`}
-                            disabled={item.quantity <= 1}
-                            onClick={() => setQuantity(item.productId, item.size, item.color, item.quantity - 1)}
-                            className="px-3 py-1.5 text-brand-espresso/70 transition-colors duration-200 hover:text-brand-terracotta disabled:cursor-not-allowed disabled:text-brand-espresso/25 disabled:hover:text-brand-espresso/25"
-                          >
+                           <button
+                             type="button"
+                             aria-label={`Decrease quantity of ${item.name}`}
+                             disabled={item.quantity <= 1}
+                             onClick={async () => {
+                               try {
+                                 await setQuantity(item.productId, item.size, item.color, item.quantity - 1);
+                               } catch {
+                                 console.error('Could not update quantity.');
+                               }
+                             }}
+                             className="px-3 py-1.5 text-brand-espresso/70 transition-colors duration-200 hover:text-brand-terracotta disabled:cursor-not-allowed disabled:text-brand-espresso/25 disabled:hover:text-brand-espresso/25"
+                           >
                             &minus;
                           </button>
                           <span className="min-w-[2rem] text-center font-sans text-sm tabular-nums text-brand-espresso">
                             {item.quantity}
                           </span>
-                          <button
-                            type="button"
-                            aria-label={`Increase quantity of ${item.name}`}
-                            disabled={item.quantity >= item.maxQuantity}
-                            onClick={() => setQuantity(item.productId, item.size, item.color, item.quantity + 1)}
-                            className="px-3 py-1.5 text-brand-espresso/70 transition-colors duration-200 hover:text-brand-terracotta disabled:cursor-not-allowed disabled:text-brand-espresso/25 disabled:hover:text-brand-espresso/25"
-                          >
+                           <button
+                             type="button"
+                             aria-label={`Increase quantity of ${item.name}`}
+                             disabled={item.quantity >= item.maxQuantity}
+                             onClick={async () => {
+                               try {
+                                 await setQuantity(item.productId, item.size, item.color, item.quantity + 1);
+                               } catch {
+                                 console.error('Could not update quantity.');
+                               }
+                             }}
+                             className="px-3 py-1.5 text-brand-espresso/70 transition-colors duration-200 hover:text-brand-terracotta disabled:cursor-not-allowed disabled:text-brand-espresso/25 disabled:hover:text-brand-espresso/25"
+                           >
                             +
                           </button>
                         </div>
@@ -178,11 +190,17 @@ export default function CartDrawer() {
                         </span>
                       </div>
 
-                      <button
-                        type="button"
-                        onClick={() => removeItem(item.productId, item.size, item.color)}
-                        className="mt-3 self-start font-sans text-[0.5625rem] uppercase tracking-[0.25em] text-brand-espresso/50 underline decoration-brand-antiqueGold/60 underline-offset-4 transition-colors duration-300 hover:text-brand-terracotta"
-                      >
+                     <button
+                       type="button"
+                       onClick={async () => {
+                         try {
+                           await removeItem(item.productId, item.size, item.color);
+                         } catch {
+                           console.error('Could not remove item.');
+                         }
+                       }}
+                       className="mt-3 self-start font-sans text-[0.5625rem] uppercase tracking-[0.25em] text-brand-espresso/50 underline decoration-brand-antiqueGold/60 underline-offset-4 transition-colors duration-300 hover:text-brand-terracotta"
+                     >
                         Remove
                       </button>
                     </div>

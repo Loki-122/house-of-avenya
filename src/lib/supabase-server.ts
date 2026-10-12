@@ -5,6 +5,11 @@
  * the anon key and carries the request's cookies so Row Level Security can
  * identify the signed-in user, if any. Never use the service role key here —
  * doing so would silently bypass every RLS policy.
+ *
+ * Pass the customer's access token (read from the session cookie) when you
+ * need per-user RLS to work on the server side. Without it the client runs
+ * as the `anon` role, where `auth.uid()` is NULL and all RLS policies
+ * with `auth.uid() = …` evaluate to false.
  */
 import { createClient } from '@supabase/supabase-js';
 
@@ -17,11 +22,14 @@ if (!supabaseUrl || !supabaseAnonKey) {
   );
 }
 
-export function createSupabaseServerClient() {
+export function createSupabaseServerClient(accessToken?: string) {
   return createClient(supabaseUrl!, supabaseAnonKey!, {
     auth: {
       persistSession: false,
       autoRefreshToken: false,
     },
+    global: accessToken
+      ? { headers: { Authorization: `Bearer ${accessToken}` } }
+      : {},
   });
 }

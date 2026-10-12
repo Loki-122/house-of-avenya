@@ -2,6 +2,7 @@
 
 import Link from 'next/link';
 import { useCart, MAX_LINE_QUANTITY } from '@/lib/cart';
+import { useRouter } from 'next/navigation';
 import { formatPrice, FREE_SHIPPING_THRESHOLD } from '@/lib/format';
 
 /**
@@ -10,6 +11,7 @@ import { formatPrice, FREE_SHIPPING_THRESHOLD } from '@/lib/format';
  * cart is backed by a database rather than localStorage.
  */
 export default function CartView() {
+  const router = useRouter();
   const { items, itemCount, subtotal, shipping, total, isHydrated, setQuantity, removeItem, clearCart } = useCart();
 
   const lineCount = items.length;
@@ -140,13 +142,19 @@ export default function CartView() {
 
                   <div className="mt-auto flex flex-wrap items-center justify-between gap-4 pt-6">
                     <div className="flex items-center border border-brand-antiqueGold/40">
-                      <button
-                        type="button"
-                        aria-label={`Decrease quantity of ${item.name}`}
-                        disabled={item.quantity <= 1}
-                        onClick={() => setQuantity(item.productId, item.size, item.color, item.quantity - 1)}
-                        className="px-4 py-2.5 text-brand-espresso/70 transition-colors duration-200 hover:text-brand-terracotta disabled:cursor-not-allowed disabled:text-brand-espresso/25 disabled:hover:text-brand-espresso/25"
-                      >
+                         <button
+                           type="button"
+                           aria-label={`Decrease quantity of ${item.name}`}
+                           disabled={item.quantity <= 1}
+                           onClick={async () => {
+                             try {
+                               await setQuantity(item.productId, item.size, item.color, item.quantity - 1);
+                             } catch {
+                               console.error('Could not update quantity.');
+                             }
+                           }}
+                           className="px-4 py-2.5 text-brand-espresso/70 transition-colors duration-200 hover:text-brand-terracotta disabled:cursor-not-allowed disabled:text-brand-espresso/25 disabled:hover:text-brand-espresso/25"
+                         >
                         &minus;
                       </button>
                       <span
@@ -155,25 +163,37 @@ export default function CartView() {
                       >
                         {item.quantity}
                       </span>
-                      <button
-                        type="button"
-                        aria-label={`Increase quantity of ${item.name}`}
-                        disabled={item.quantity >= maxQuantity}
-                        onClick={() => setQuantity(item.productId, item.size, item.color, item.quantity + 1)}
-                        className="px-4 py-2.5 text-brand-espresso/70 transition-colors duration-200 hover:text-brand-terracotta disabled:cursor-not-allowed disabled:text-brand-espresso/25 disabled:hover:text-brand-espresso/25"
-                      >
+                         <button
+                           type="button"
+                           aria-label={`Increase quantity of ${item.name}`}
+                           disabled={item.quantity >= maxQuantity}
+                           onClick={async () => {
+                             try {
+                               await setQuantity(item.productId, item.size, item.color, item.quantity + 1);
+                             } catch {
+                               console.error('Could not update quantity.');
+                             }
+                           }}
+                           className="px-4 py-2.5 text-brand-espresso/70 transition-colors duration-200 hover:text-brand-terracotta disabled:cursor-not-allowed disabled:text-brand-espresso/25 disabled:hover:text-brand-espresso/25"
+                         >
                         +
                       </button>
                     </div>
 
                     <div className="flex items-center gap-6">
-                      <button
-                        type="button"
-                        onClick={() => removeItem(item.productId, item.size, item.color)}
-                        className="font-sans text-[0.5625rem] uppercase tracking-[0.25em] text-brand-espresso/50 underline decoration-brand-antiqueGold/60 underline-offset-4 transition-colors duration-300 hover:text-brand-terracotta"
-                      >
-                        Remove
-                      </button>
+                       <button
+                         type="button"
+                         onClick={async () => {
+                           try {
+                             await removeItem(item.productId, item.size, item.color);
+                           } catch {
+                             console.error('Could not remove item.');
+                           }
+                         }}
+                         className="font-sans text-[0.5625rem] uppercase tracking-[0.25em] text-brand-espresso/50 underline decoration-brand-antiqueGold/60 underline-offset-4 transition-colors duration-300 hover:text-brand-terracotta"
+                       >
+                         Remove
+                       </button>
 
                       <p className="font-display text-lg tabular-nums text-brand-espresso">
                         {formatPrice(item.price * item.quantity)}
@@ -217,7 +237,13 @@ export default function CartView() {
 
           <button
             type="button"
-            onClick={clearCart}
+            onClick={async () => {
+              try {
+                await clearCart();
+              } catch {
+                console.error('Could not clear cart.');
+              }
+            }}
             className="font-sans text-[0.5625rem] uppercase tracking-[0.25em] text-brand-espresso/50 underline decoration-brand-antiqueGold/60 underline-offset-4 transition-colors duration-300 hover:text-brand-terracotta"
           >
             Empty Bag
@@ -256,18 +282,13 @@ export default function CartView() {
               : 'Complimentary shipping applied.'}
           </p>
 
-          {/* Payments are the next release; this is the documented next step and
-              intentionally does nothing yet. */}
           <button
             type="button"
-            disabled
-            className="mt-8 w-full cursor-not-allowed bg-brand-warmWhite px-6 py-4 font-sans text-[0.6875rem] uppercase tracking-[0.25em] text-brand-espresso/45"
+            onClick={() => router.push('/checkout')}
+            className="mt-8 w-full bg-brand-espresso px-6 py-4 font-sans text-[0.6875rem] uppercase tracking-[0.25em] text-brand-ivory transition-colors duration-300 hover:bg-brand-espressoLight"
           >
             Proceed To Checkout
           </button>
-          <p className="mt-3 text-center font-sans text-[0.5625rem] uppercase tracking-[0.2em] text-brand-espresso/45">
-            Checkout opens with the next release
-          </p>
         </div>
 
         <ul className="mt-8 flex flex-col gap-3">

@@ -85,6 +85,15 @@ function BagIcon({ className }: IconProps) {
   );
 }
 
+function UserIcon({ className }: IconProps) {
+  return (
+    <svg width="20" height="20" viewBox="0 0 24 24" aria-hidden="true" {...STROKE_PROPS} className={className}>
+      <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
+      <circle cx="12" cy="7" r="4" />
+    </svg>
+  );
+}
+
 function MenuIcon({ className }: IconProps) {
   return (
     <svg width="22" height="22" viewBox="0 0 24 24" aria-hidden="true" {...STROKE_PROPS} className={className}>
@@ -190,6 +199,7 @@ function HeaderActions({
   onSearch,
   onWishlist,
   onBag,
+  accountHref,
 }: {
   tone: Tone;
   wishlistCount: number;
@@ -197,6 +207,7 @@ function HeaderActions({
   onSearch: () => void;
   onWishlist: () => void;
   onBag: () => void;
+  accountHref: string;
 }) {
   return (
     <div className="flex items-center gap-5 md:gap-6">
@@ -209,6 +220,13 @@ function HeaderActions({
       <IconButton label={`Shopping bag (${bagCount} items)`} tone={tone} onClick={onBag} badge={bagCount}>
         <BagIcon />
       </IconButton>
+      <Link
+        href={accountHref}
+        aria-label="Account"
+        className={`group relative -m-2 p-2 transition-colors duration-300 active:scale-95 [&>svg]:transition-transform [&>svg]:duration-300 [&>svg]:group-hover:scale-110 motion-reduce:[&>svg]:transition-none ${TONE[tone].icon}`}
+      >
+        <UserIcon />
+      </Link>
     </div>
   );
 }
@@ -217,6 +235,7 @@ export default function Header({
   navItems = NAV_ITEMS,
   wishlistCount = 0,
   bagCount = 0,
+  accountHref = '/login',
   onSearch,
   onWishlist,
   onBag,
@@ -225,6 +244,7 @@ export default function Header({
   navItems?: HeaderNavItem[];
   wishlistCount?: number;
   bagCount?: number;
+  accountHref?: string;
   onSearch?: () => void;
   onWishlist?: () => void;
   onBag?: () => void;
@@ -320,6 +340,7 @@ export default function Header({
               tone={tone}
               wishlistCount={wishlistCount}
               bagCount={bagCount}
+              accountHref={accountHref}
               onSearch={onSearch ?? (() => {})}
               onWishlist={onWishlist ?? (() => {})}
               onBag={onBag ?? (() => {})}
@@ -401,6 +422,13 @@ export default function Header({
                   <IconButton label={`Shopping bag (${bagCount} items)`} tone="solid" onClick={onBag} badge={bagCount}>
                     <BagIcon />
                   </IconButton>
+                  <Link
+                    href={accountHref}
+                    aria-label="Account"
+                    className={`group relative -m-2 p-2 transition-colors duration-300 active:scale-95 [&>svg]:transition-transform [&>svg]:duration-300 [&>svg]:group-hover:scale-110 motion-reduce:[&>svg]:transition-none ${TONE.solid.icon}`}
+                  >
+                    <UserIcon />
+                  </Link>
                 </div>
               </div>
             </div>

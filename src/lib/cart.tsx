@@ -1,6 +1,6 @@
 'use client';
 
-import { createContext, useCallback, useContext, useEffect, useMemo, useReducer, useState, type ReactNode } from 'react';
+import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState, useReducer, type ReactNode } from 'react';
 import { shippingFor } from './format';
 import {
   clearStoredCart,
@@ -9,10 +9,18 @@ import {
   writeCart,
   type CartItem,
 } from './cart-storage';
+import { supabase } from '@/lib/supabase';
+import {
+  loadCartFromSupabase,
+  upsertCartItem,
+  updateCartItemQuantity,
+  deleteCartItem,
+  clearCartFromSupabase,
+  syncLocalToSupabase,
+} from './cart-sync';
 
 export type { CartItem };
 
-/** What the caller hands over when adding a line to the bag. */
 export type AddToCartInput = Omit<CartItem, 'quantity'> & { quantity?: number };
 
 type CartAction =
@@ -22,7 +30,6 @@ type CartAction =
   | { type: 'remove'; key: string }
   | { type: 'clear' };
 
-/** Hard ceiling on a single line, independent of what is in stock. */
 export const MAX_LINE_QUANTITY = 10;
 
 function clampQuantity(quantity: number, maxQuantity: number): number {
@@ -77,18 +84,16 @@ function cartReducer(state: CartItem[], action: CartAction): CartItem[] {
 
 export type CartContextValue = {
   items: CartItem[];
-  /** Units in the bag, not lines — this is what the header badge shows. */
   itemCount: number;
   subtotal: number;
   shipping: number;
   total: number;
   isOpen: boolean;
-  /** False until the persisted cart has been read on the client. */
   isHydrated: boolean;
-  addItem: (input: AddToCartInput) => void;
-  setQuantity: (productId: string, size: string | null, color: string | null, quantity: number) => void;
-  removeItem: (productId: string, size: string | null, color: string | null) => void;
-  clearCart: () => void;
+  addItem: (input: AddToCartInput) => Promise<void>;
+  setQuantity: (productId: string, size: string | null, color: string | null, quantity: number) => Promise<void>;
+  removeItem: (productId: string, size: string | null, color: string | null) => Promise<void>;
+  clearCart: () => Promise<void>;
   openCart: () => void;
   closeCart: () => void;
 };
@@ -99,40 +104,124 @@ export function CartProvider({ children }: { children: ReactNode }) {
   const [items, dispatch] = useReducer(cartReducer, []);
   const [isOpen, setIsOpen] = useState(false);
   const [isHydrated, setIsHydrated] = useState(false);
+  const [userId, setUserId] = useState<string | null>(null);
 
-  // Read persisted state after mount rather than in the reducer initialiser:
-  // localStorage does not exist during the server render, and touching it in an
-  // initialiser would produce a hydration mismatch.
-  useEffect(() => {
-    dispatch({ type: 'hydrate', items: readCart() });
-    setIsHydrated(true);
-  }, []);
+  // Ref keeps the latest userId available synchronously inside async callbacks.
+  // React may batch setUserId, so state can lag — the ref never does.
+  const userIdRef = useRef<string | null>(null);
+  // Ref keeps the latest items for synchronous access in callbacks.
+  const itemsRef = useRef<CartItem[]>([]);
+  itemsRef.current = items;
 
+   // Single initialization + auth state handling.
+   //
+   // Supabase's onAuthStateChange fires synchronously on subscription with the
+   // current session (if any). This is the single source of truth for auth
+   // state — we deliberately do NOT call getSession() separately because it
+   // races with session hydration: on a fresh page load after refresh, the
+   // session may not be available yet when getSession() resolves, while
+   // onAuthStateChange's initial fire reliably carries the real session.
+   //
+   // Previously, an init() effect called getSession() and a separate
+   // onAuthStateChange effect skipped its initial fire with isInitialFire.
+   // If getSession() resolved first (returning null during hydration), the
+   // cart was set to empty localStorage. The real session in the skipped
+   // onAuthStateChange initial fire was then never processed.
+   useEffect(() => {
+     let active = true;
+
+     const {
+       data: { subscription },
+     } = supabase.auth.onAuthStateChange(async (_event, session) => {
+       if (!active) return;
+
+       if (session?.user) {
+         const newUserId = session.user.id;
+         userIdRef.current = newUserId;
+         setUserId(newUserId);
+
+         try {
+           await syncLocalToSupabase(newUserId);
+         } catch {
+           // Sync failures should not block cart display.
+         }
+         try {
+           const dbItems = await loadCartFromSupabase(newUserId);
+           if (active) dispatch({ type: 'hydrate', items: dbItems });
+         } catch {
+           // Keep existing cart state if Supabase load fails.
+         }
+       } else {
+         userIdRef.current = null;
+         setUserId(null);
+         if (active) dispatch({ type: 'hydrate', items: readCart() });
+       }
+
+       if (active) setIsHydrated(true);
+     });
+
+     return () => {
+       active = false;
+       subscription.unsubscribe();
+     };
+   }, []);
+
+  // Write to localStorage for guests whenever items change.
+  // Authenticated users sync to Supabase instead.
   useEffect(() => {
-    if (!isHydrated) return;
+    if (!isHydrated || userId) return;
     writeCart(items);
-  }, [items, isHydrated]);
+  }, [items, isHydrated, userId]);
 
-  const addItem = useCallback((input: AddToCartInput) => {
-    dispatch({
-      type: 'add',
-      item: { ...input, quantity: clampQuantity(input.quantity ?? 1, input.maxQuantity) },
-    });
+  const addItem = useCallback(async (input: AddToCartInput) => {
+    const currentUserId = userIdRef.current;
+    const item: CartItem = {
+      ...input,
+      quantity: clampQuantity(input.quantity ?? 1, input.maxQuantity),
+    };
+
+    if (currentUserId) {
+      await upsertCartItem(currentUserId, item);
+    }
+
+    dispatch({ type: 'add', item });
   }, []);
 
   const setQuantity = useCallback(
-    (productId: string, size: string | null, color: string | null, quantity: number) => {
+    async (productId: string, size: string | null, color: string | null, quantity: number) => {
+      const currentUserId = userIdRef.current;
+
+      if (currentUserId) {
+        await updateCartItemQuantity(currentUserId, productId, size, color, quantity);
+      }
+
       dispatch({ type: 'setQuantity', key: lineKey(productId, size, color), quantity });
     },
     [],
   );
 
-  const removeItem = useCallback((productId: string, size: string | null, color: string | null) => {
-    dispatch({ type: 'remove', key: lineKey(productId, size, color) });
-  }, []);
+  const removeItem = useCallback(
+    async (productId: string, size: string | null, color: string | null) => {
+      const currentUserId = userIdRef.current;
 
-  const clearCart = useCallback(() => {
-    clearStoredCart();
+      if (currentUserId) {
+        await deleteCartItem(currentUserId, productId, size, color);
+      }
+
+      dispatch({ type: 'remove', key: lineKey(productId, size, color) });
+    },
+    [],
+  );
+
+  const clearCart = useCallback(async () => {
+    const currentUserId = userIdRef.current;
+
+    if (currentUserId) {
+      await clearCartFromSupabase(currentUserId);
+    } else {
+      clearStoredCart();
+    }
+
     dispatch({ type: 'clear' });
   }, []);
 

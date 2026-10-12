@@ -3,14 +3,16 @@ import PageIntro from '@/components/PageIntro';
 import WishlistView from '@/components/WishlistView';
 import Newsletter from '@/components/Newsletter';
 import Footer from '@/components/Footer';
-import { products } from '@/lib/products';
+import { getProducts } from '@/lib/catalog';
 
 export const metadata: Metadata = {
   title: 'Wishlist — House of Avenya',
   description: 'The House of Avenya pieces you have saved — return to them whenever you are ready.',
 };
 
-export default function WishlistPage() {
+export default async function WishlistPage() {
+  const products = await getProducts();
+
   return (
     <>
       <main className="min-h-screen overflow-x-clip">
@@ -21,7 +23,9 @@ export default function WishlistPage() {
         />
 
         <section aria-labelledby="wishlist-list-heading" className="px-5 py-20 sm:px-8 md:py-28">
-          <WishlistView products={products} />
+          <div className="mx-auto max-w-7xl">
+            <WishlistView products={products} />
+          </div>
         </section>
 
         <Newsletter />

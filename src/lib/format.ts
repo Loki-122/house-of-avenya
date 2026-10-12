@@ -21,9 +21,10 @@ export function discountPercent(price: number, compareAtPrice?: number): number 
  * Shipping rules live here rather than in the cart so both the server-rendered
  * pages and the client cart can read them without importing across the RSC
  * boundary.
+ * Aligned with checkout-shipping.ts and the order-creation RPC.
  */
-export const FREE_SHIPPING_THRESHOLD = 15000;
-export const FLAT_SHIPPING_RATE = 350;
+export const FREE_SHIPPING_THRESHOLD = 2000;
+export const FLAT_SHIPPING_RATE = 99;
 
 export function shippingFor(subtotal: number): number {
   if (subtotal <= 0) return 0;

@@ -66,7 +66,7 @@ export default function ProductBuyBox({ product }: { product: Product }) {
     setMessage(null);
   };
 
-  const add = (then: 'bag' | 'buy') => {
+  const add = async (then: 'bag' | 'buy') => {
     // Both variant axes are optional per product, but a product that offers a
     // choice must not be added without one — otherwise the cart line has no
     // variant to show and cannot be matched to a real SKU.
@@ -74,34 +74,34 @@ export default function ProductBuyBox({ product }: { product: Product }) {
       setMessage('Please choose a size to continue.');
       return;
     }
-
     if (needsColor) {
       setMessage('Please choose a colour to continue.');
       return;
     }
 
-    addItem({
-      productId: product.id,
-      slug: product.slug,
-      name: product.name,
-      category: product.category,
-      maxQuantity: product.stock,
-      price: product.price,
-      image: primary.src,
-      imageAlt: primary.alt,
-      size,
-      color,
-      quantity,
-    });
+    try {
+      await addItem({
+        productId: product.id,
+        slug: product.slug,
+        name: product.name,
+        category: product.category,
+        maxQuantity: product.stock,
+        price: product.price,
+        image: primary.src,
+        imageAlt: primary.alt,
+        size,
+        color,
+        quantity,
+      });
 
-    setIsAdded(true);
-    setMessage(null);
+      setIsAdded(true);
+      setMessage(null);
 
-    if (then === 'buy') {
-      // The payment step itself is not wired up yet, so the bag order summary is
-      // the checkout placeholder: Buy Now puts this exact variant and quantity
-      // in the bag and hands off there rather than re-opening the drawer.
-      router.push('/cart');
+      if (then === 'buy') {
+        router.push('/cart');
+      }
+    } catch {
+      setMessage('Could not add to your bag. Please try again.');
     }
   };
 

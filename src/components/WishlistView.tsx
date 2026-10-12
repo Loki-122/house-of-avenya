@@ -3,6 +3,7 @@
 import Link from 'next/link';
 import ProductCard from './ProductCard';
 import { useWishlist } from '@/lib/wishlist';
+import { useState } from 'react';
 import type { Product } from '@/lib/products';
 
 function ArrowCta({ href, children }: { href: string; children: string }) {
@@ -44,6 +45,7 @@ function ArrowCta({ href, children }: { href: string; children: string }) {
  */
 export default function WishlistView({ products }: { products: Product[] }) {
   const { ids, isHydrated, clear } = useWishlist();
+  const [error, setError] = useState<string | null>(null);
 
   // Resolve in wishlist order (most recently saved first), and drop ids whose
   // product has since left the catalogue.
@@ -71,11 +73,25 @@ export default function WishlistView({ products }: { products: Product[] }) {
         {isHydrated && count > 0 && (
           <button
             type="button"
-            onClick={clear}
+            onClick={async () => {
+              setError(null);
+              try {
+                await clear();
+              } catch (err) {
+                const message = err instanceof Error ? err.message : 'Could not clear wishlist. Please try again.';
+                setError(message);
+              }
+            }}
             className="self-start font-sans text-[0.6875rem] uppercase tracking-[0.25em] text-brand-espresso/60 underline decoration-brand-antiqueGold underline-offset-4 transition-colors duration-300 hover:text-brand-terracotta sm:self-auto"
           >
             Clear Wishlist
           </button>
+        )}
+
+        {error && (
+          <p role="alert" className="mt-4 font-sans text-[0.625rem] uppercase tracking-[0.2em] text-brand-burgundy">
+            {error}
+          </p>
         )}
       </div>
 

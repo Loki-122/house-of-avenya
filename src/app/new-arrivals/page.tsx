@@ -3,16 +3,15 @@ import PageHero from '@/components/PageHero';
 import ProductCard from '@/components/ProductCard';
 import Newsletter from '@/components/Newsletter';
 import Footer from '@/components/Footer';
-import { products } from '@/lib/catalog';
+import { getNewArrivalsAsync } from '@/lib/catalog'
 
 export const metadata: Metadata = {
   title: 'New Arrivals — House of Avenya',
   description: 'The most recent additions to the House of Avenya collection.',
 };
 
-const newArrivals = products.filter((product) => product.isNew);
-
-export default function NewArrivalsPage() {
+export default async function NewArrivalsPage() {
+  const newArrivals = await getNewArrivalsAsync()
   return (
     <>
       <main className="min-h-screen overflow-x-clip">
