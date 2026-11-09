@@ -16,6 +16,10 @@ export const metadata: Metadata = {
   authors: [{ name: 'House of Avenya' }],
   creator: 'House of Avenya',
   publisher: 'House of Avenya',
+  icons: {
+    icon: '/favicon.png',
+    apple: '/apple-touch-icon.png',
+  },
   formatDetection: {
     email: false,
     address: false,

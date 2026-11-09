@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useRef, useState, type ReactNode } from 'react';
 import Link from 'next/link';
+import Image from 'next/image';
 import { usePathname } from 'next/navigation';
 
 export type HeaderNavItem = {
@@ -152,22 +153,10 @@ function IconButton({
 }
 
 function Wordmark({ tone }: { tone: Tone }) {
+  const src = tone === 'overlay' ? '/avenya-gold-logo-png.png' : '/avenya logo green.png';
   return (
-    <Link
-      href="/"
-      aria-label="House of Avenya — home"
-      className={`group flex flex-col items-start leading-none shrink-0 transition-colors duration-500 ${TONE[tone].word}`}
-    >
-      <span className="font-sans text-[0.5rem] md:text-[0.5625rem] uppercase tracking-[0.42em] opacity-70">
-        House of
-      </span>
-      <span className="relative font-display text-base md:text-xl font-medium uppercase tracking-[0.3em] mt-1.5">
-        Avenya
-        <span
-          className={`absolute -bottom-1.5 left-0 h-px w-full origin-left scale-x-0 transition-transform duration-500 ease-out group-hover:scale-x-100 ${TONE[tone].rule}`}
-          aria-hidden="true"
-        />
-      </span>
+    <Link href="/" aria-label="House of Avenya — home" className="shrink-0 group focus-visible:outline-none">
+      <Image src={src} alt="House of Avenya" width={5899} height={5319} className="w-[72px] md:w-[120px] h-auto object-contain transition-transform duration-300 ease-[cubic-bezier(0.22,0.61,0.36,1)] group-hover:scale-[1.05] motion-reduce:transition-none motion-reduce:group-hover:scale-100 focus-visible:ring-2 focus-visible:ring-brand-antiqueGold/60 rounded-sm" priority />
     </Link>
   );
 }
@@ -326,7 +315,7 @@ export default function Header({
             : 'bg-gradient-to-b from-brand-espresso/35 to-transparent border-b border-transparent'
         }`}
       >
-        <div className="mx-auto flex h-20 max-w-7xl items-center justify-between gap-8 px-6 sm:px-8 md:h-24 lg:px-10">
+        <div className="mx-auto flex h-24 max-w-7xl items-center justify-between gap-8 px-6 sm:px-8 md:h-28 lg:px-10">
           <Wordmark tone={tone} />
 
           <nav className="hidden items-center gap-12 md:flex" aria-label="Main navigation">
