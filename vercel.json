@@ -1,0 +1,8 @@
+{
+  "crons": [
+    {
+      "path": "/api/payments/razorpay/restore-expired",
+      "schedule": "0 3 * * *"
+    }
+  ]
+}
